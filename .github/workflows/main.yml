@@ -1,0 +1,44 @@
+# master branch에 push 되었을 때
+on: 
+  push:            
+    branches:
+      - 'master'
+
+# 아래의 일을 수행한다. 
+jobs:
+  build:
+    name: Git Pull & Docker Build
+    runs-on: ubuntu-latest
+    steps:
+    -
+      # SSH로 접속하여 master 브랜치를 pull 받는다.
+      name: Git Pull by Connecting SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: 3.35.234.70
+        username: epiloum
+        password: dockerhub100!
+        port: 22
+        script: |
+          cd /home/ubuntu/nodeapp
+          git checkout master         
+          git pull
+    -
+      name: Checkout
+      uses: actions/checkout@v3
+    -
+      # DockerHub에 로그인한다. 
+      name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: epiloum
+        password: dockerhub100!
+    -
+      # 이미지를 build하고 DockerHub에 push 한다.
+      name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        file: ./Dockerfile
+        context: .
+        push: true
+        tags: epiloum/node:latest
